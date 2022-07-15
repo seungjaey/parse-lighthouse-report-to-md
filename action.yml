@@ -1,11 +1,35 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'parse-lighthouse-report-to-md'
+description: 'Read Lighthouse report files and parse to markdown string'
+author: 'kurly'
 inputs:
-  milliseconds: # change this
+  URL_LIST_JSON_STRING:
     required: true
-    description: 'input description here'
-    default: 'default value if applicable'
+    description: 'URL-LABEL Dataset'
+
+  REPORT_DIR_NAME:
+    required: true
+    description: 'Report dir name'
+
+  ASSERTION_DIR_NAME:
+    required: false
+    description: 'Test target url list'
+
+  GH_TOKEN:
+    required: true
+    description: 'Github token for upload image'
+
+  IMAGE_REPO_NAME:
+    required: true
+    description: 'Image Repository name'
+
+  IMAGE_REPO_OWNER_NAME:
+    required: true
+    description: 'Image Repository owner name'
+
+outputs:
+  REPORT_MD_STRING:
+    description: 'Markdown string'
+
 runs:
   using: 'node16'
   main: 'dist/index.js'
