@@ -147,9 +147,10 @@ function run() {
                 })), core_1.toArray);
             })), core_1.flat, (0, core_1.groupBy)(a => a.id), core_1.entries, (0, core_1.map)(args => {
                 const [id, list] = args;
+                const hasLowScore = (0, core_1.pipe)(list, (0, core_1.map)(({ summary }) => (0, core_1.pipe)((0, core_1.values)(summary), core_1.toArray)), core_1.flat, core_1.toArray, (0, core_1.some)(score => score < 0.5));
                 return [
-                    '<details>',
-                    `\t<summary>${id}</summary>`,
+                    `<details ${hasLowScore ? 'open' : ''}>`,
+                    `\t<summary>${hasLowScore ? '🚨' : ''} ${id}</summary>`,
                     '\t<table>',
                     '\t<tbody>',
                     ...(0, core_1.pipe)(list, (0, core_1.map)(a => {

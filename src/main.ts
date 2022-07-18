@@ -192,7 +192,7 @@ async function run(): Promise<void> {
         )
         return [
           `<details ${hasLowScore ? 'open' : ''}>`,
-          `\t<summary>🚨 ${id}</summary>`,
+          `\t<summary>${hasLowScore ? '🚨' : ''} ${id}</summary>`,
           '\t<table>',
           '\t<tbody>',
           ...pipe(
