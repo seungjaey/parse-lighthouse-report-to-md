@@ -7,7 +7,9 @@ import {
   entries,
   groupBy,
   keys,
-  flat
+  flat,
+  values,
+  some
 } from '@fxts/core'
 import {getOctokit} from '@actions/github'
 import * as core from '@actions/core'
@@ -139,7 +141,10 @@ async function run(): Promise<void> {
         const [formFactor, manifestList] = args
         return pipe(
           manifestList as ManifestItem[],
-          map(manifestItem => ({...manifestItem, formFactor})),
+          map(manifestItem => ({
+            ...manifestItem,
+            formFactor
+          })),
           toAsync,
           map(async manifestItem => {
             const {jsonPath} = manifestItem
@@ -178,9 +183,16 @@ async function run(): Promise<void> {
       entries,
       map(args => {
         const [id, list] = args
+        const hasLowScore = pipe(
+          list,
+          map(({summary}) => pipe(values(summary), toArray)),
+          flat,
+          toArray,
+          some(score => score < 0.5)
+        )
         return [
-          '<details>',
-          `\t<summary>${id}</summary>`,
+          `<details ${hasLowScore ? 'open' : ''}>`,
+          `\t<summary>🚨 ${id}</summary>`,
           '\t<table>',
           '\t<tbody>',
           ...pipe(
