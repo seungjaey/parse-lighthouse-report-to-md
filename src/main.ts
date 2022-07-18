@@ -66,7 +66,11 @@ const uploadImage = async (
       repo: repoName,
       message: 'Adding an image to the repository',
       path: `${epochTime}/${formFactor}/${encodeURIComponent(pathSlug)}.jpg`,
-      content: imageBinaryStr.replace(JPEG_PLACE_HOLDER, '')
+      content: imageBinaryStr.replace(JPEG_PLACE_HOLDER, ''),
+      committer: {
+        name: 'seungjaey',
+        email: 'seungjae.yuk@kurlycorp.com'
+      }
     })
     return result.data?.content?.download_url || ''
   } catch (error) {

@@ -91,7 +91,11 @@ const uploadImage = (epochTime, ghToken, repoName, ownerName, formFactor, pathSl
             repo: repoName,
             message: 'Adding an image to the repository',
             path: `${epochTime}/${formFactor}/${encodeURIComponent(pathSlug)}.jpg`,
-            content: imageBinaryStr.replace(JPEG_PLACE_HOLDER, '')
+            content: imageBinaryStr.replace(JPEG_PLACE_HOLDER, ''),
+            committer: {
+                name: 'seungjaey',
+                email: 'seungjae.yuk@kurlycorp.com'
+            }
         });
         return ((_b = (_a = result.data) === null || _a === void 0 ? void 0 : _a.content) === null || _b === void 0 ? void 0 : _b.download_url) || '';
     }
