@@ -72,6 +72,7 @@ const uploadImage = async (
   } catch (error) {
     core.error('image upload error')
     core.error((error as Error).message)
+    core.error((error as Error).stack || '')
     return ''
   }
 }

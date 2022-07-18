@@ -98,6 +98,7 @@ const uploadImage = (epochTime, ghToken, repoName, ownerName, formFactor, pathSl
     catch (error) {
         core.error('image upload error');
         core.error(error.message);
+        core.error(error.stack || '');
         return '';
     }
 });
