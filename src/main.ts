@@ -50,7 +50,7 @@ const getEntryEpochTime = (): number => Date.now()
 
 const uploadImage = async (
   epochTime: number,
-  ghToken: string,
+  imageRepoToken: string,
   repoName: string,
   ownerName: string,
   formFactor: string,
@@ -58,19 +58,14 @@ const uploadImage = async (
   imageBinaryStr: string
 ): Promise<string> => {
   try {
-    core.info('image upload')
-    const ocktokit = getOctokit(ghToken)
+    const ocktokit = getOctokit(imageRepoToken)
     const JPEG_PLACE_HOLDER = 'data:image/jpeg;base64,'
     const result = await ocktokit.rest.repos.createOrUpdateFileContents({
       owner: ownerName,
       repo: repoName,
       message: 'Adding an image to the repository',
       path: `${epochTime}/${formFactor}/${encodeURIComponent(pathSlug)}.jpg`,
-      content: imageBinaryStr.replace(JPEG_PLACE_HOLDER, ''),
-      committer: {
-        name: 'seungjaey',
-        email: 'seungjae.yuk@kurlycorp.com'
-      }
+      content: imageBinaryStr.replace(JPEG_PLACE_HOLDER, '')
     })
     return result.data?.content?.download_url || ''
   } catch (error) {
@@ -116,8 +111,13 @@ const createMarkdownTableRow = (
 async function run(): Promise<void> {
   try {
     const input = parseInput()
-    const {urlList, reportDirName, ghToken, imageRepoName, imageRepoOwnerName} =
-      input
+    const {
+      urlList,
+      reportDirName,
+      imageRepoToken,
+      imageRepoName,
+      imageRepoOwnerName
+    } = input
     const entryEpochTime = getEntryEpochTime()
     const urlGrouped = pipe(
       urlList,
@@ -157,7 +157,7 @@ async function run(): Promise<void> {
             const {pathSlug, label, path} = urlGrouped[url][0]
             const imagePath = await uploadImage(
               entryEpochTime,
-              ghToken,
+              imageRepoToken,
               imageRepoName,
               imageRepoOwnerName,
               manifestItem.formFactor as string,

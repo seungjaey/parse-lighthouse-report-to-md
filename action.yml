@@ -10,9 +10,9 @@ inputs:
     required: true
     description: 'Report dir name'
 
-  GH_TOKEN:
+  IMAGE_REPO_TOKEN:
     required: true
-    description: 'Github token for upload image'
+    description: 'Token that can access to image repo'
 
   IMAGE_REPO_NAME:
     required: true

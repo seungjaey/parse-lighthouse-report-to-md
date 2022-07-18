@@ -27,7 +27,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const InputName = {
     URL_LIST_JSON_STRING: 'URL_LIST_JSON_STRING',
     REPORT_DIR_NAME: 'REPORT_DIR_NAME',
-    GH_TOKEN: 'GH_TOKEN',
+    IMAGE_REPO_TOKEN: 'IMAGE_REPO_TOKEN',
     IMAGE_REPO_NAME: 'IMAGE_REPO_NAME',
     IMAGE_REPO_OWNER_NAME: 'IMAGE_REPO_OWNER_NAME'
 };
@@ -80,22 +80,17 @@ const core = __importStar(__nccwpck_require__(2186));
 const parseInput_1 = __importDefault(__nccwpck_require__(7382));
 const FormFactor_1 = __nccwpck_require__(6482);
 const getEntryEpochTime = () => Date.now();
-const uploadImage = (epochTime, ghToken, repoName, ownerName, formFactor, pathSlug, imageBinaryStr) => __awaiter(void 0, void 0, void 0, function* () {
+const uploadImage = (epochTime, imageRepoToken, repoName, ownerName, formFactor, pathSlug, imageBinaryStr) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
     try {
-        core.info('image upload');
-        const ocktokit = (0, github_1.getOctokit)(ghToken);
+        const ocktokit = (0, github_1.getOctokit)(imageRepoToken);
         const JPEG_PLACE_HOLDER = 'data:image/jpeg;base64,';
         const result = yield ocktokit.rest.repos.createOrUpdateFileContents({
             owner: ownerName,
             repo: repoName,
             message: 'Adding an image to the repository',
             path: `${epochTime}/${formFactor}/${encodeURIComponent(pathSlug)}.jpg`,
-            content: imageBinaryStr.replace(JPEG_PLACE_HOLDER, ''),
-            committer: {
-                name: 'seungjaey',
-                email: 'seungjae.yuk@kurlycorp.com'
-            }
+            content: imageBinaryStr.replace(JPEG_PLACE_HOLDER, '')
         });
         return ((_b = (_a = result.data) === null || _a === void 0 ? void 0 : _a.content) === null || _b === void 0 ? void 0 : _b.download_url) || '';
     }
@@ -129,7 +124,7 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const input = (0, parseInput_1.default)();
-            const { urlList, reportDirName, ghToken, imageRepoName, imageRepoOwnerName } = input;
+            const { urlList, reportDirName, imageRepoToken, imageRepoName, imageRepoOwnerName } = input;
             const entryEpochTime = getEntryEpochTime();
             const urlGrouped = (0, core_1.pipe)(urlList, (0, core_1.groupBy)(urlItem => urlItem.url));
             const lighthouseReportMarkdownStr = yield (0, core_1.pipe)(FormFactor_1.FormFactorList, core_1.toAsync, (0, core_1.map)((formFactor) => __awaiter(this, void 0, void 0, function* () {
@@ -147,7 +142,7 @@ function run() {
                 })), (0, core_1.map)((manifestItem) => __awaiter(this, void 0, void 0, function* () {
                     const { imageBinary, url } = manifestItem;
                     const { pathSlug, label, path } = urlGrouped[url][0];
-                    const imagePath = yield uploadImage(entryEpochTime, ghToken, imageRepoName, imageRepoOwnerName, manifestItem.formFactor, pathSlug, imageBinary);
+                    const imagePath = yield uploadImage(entryEpochTime, imageRepoToken, imageRepoName, imageRepoOwnerName, manifestItem.formFactor, pathSlug, imageBinary);
                     return Object.assign(Object.assign({}, manifestItem), { id: `${label} (${path})`, imagePath });
                 })), core_1.toArray);
             })), core_1.flat, (0, core_1.groupBy)(a => a.id), core_1.entries, (0, core_1.map)(args => {
@@ -198,13 +193,13 @@ const InputName_1 = __importDefault(__nccwpck_require__(9386));
 function parseInput() {
     const urlListString = (0, core_1.getInput)(InputName_1.default.URL_LIST_JSON_STRING);
     const reportDirName = (0, core_1.getInput)(InputName_1.default.REPORT_DIR_NAME);
-    const ghToken = (0, core_1.getInput)(InputName_1.default.GH_TOKEN);
+    const imageRepoToken = (0, core_1.getInput)(InputName_1.default.IMAGE_REPO_TOKEN);
     const imageRepoName = (0, core_1.getInput)(InputName_1.default.IMAGE_REPO_NAME);
     const imageRepoOwnerName = (0, core_1.getInput)(InputName_1.default.IMAGE_REPO_OWNER_NAME);
     return {
         urlList: JSON.parse(urlListString),
         reportDirName,
-        ghToken,
+        imageRepoToken,
         imageRepoName,
         imageRepoOwnerName
     };
