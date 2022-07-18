@@ -6,15 +6,14 @@ import {
   toAsync,
   entries,
   groupBy,
-  range,
   keys,
   flat
 } from '@fxts/core'
-import {context, getOctokit} from '@actions/github'
+import {getOctokit} from '@actions/github'
 import * as core from '@actions/core'
 
-import parseInput, {UrlItem, UrlList} from './utils/parseInput'
-import {FormFactorList} from './constants/FormFactor'
+import parseInput, {UrlList} from './utils/parseInput'
+import {FormFactorList, FormFactorName} from './constants/FormFactor'
 
 interface SimpleRunnerResult {
   audits: {
@@ -26,18 +25,20 @@ interface SimpleRunnerResult {
   }
 }
 
+interface ManifestSummary {
+  performance: number
+  accessibility: number
+  'best-practices': number
+  seo: number
+  pwa: number
+}
+
 interface ManifestItem {
   url: string
   isRepresentativeRun: boolean
   htmlPath: string
   jsonPath: string
-  summary: {
-    performance: number
-    accessibility: number
-    'best-practices': number
-    seo: number
-    pwa: number
-  }
+  summary: ManifestSummary
 
   id?: string
   imageBinary?: string
@@ -45,21 +46,7 @@ interface ManifestItem {
   formFactor?: string
 }
 
-interface MnimumManifestItem {
-  url: string
-  jsonPath: string
-  summary: {
-    performance: number
-    accessibility: number
-    'best-practices': number
-    seo: number
-    pwa: number
-  }
-
-  formFactor?: string
-}
-
-const getEntryEpochTime = () => Date.now()
+const getEntryEpochTime = (): number => Date.now()
 
 const uploadImage = async (
   epochTime: number,
@@ -86,6 +73,38 @@ const uploadImage = async (
   }
 }
 
+const scoreToColor = (score: number): string =>
+  score >= 90 ? '🟢' : score >= 50 ? '🟠' : '🔴'
+
+const createMarkdownTableRow = (
+  formFactor: FormFactorName,
+  summary: ManifestSummary,
+  imagePath: string
+): string => {
+  const scoreKeyNames = keys(summary)
+  return [
+    '\t<tr>',
+    `\t\t<td>${formFactor}</td>`,
+    `\t\t<td><img src="${imagePath}" width="250" height="250"></td>`,
+    '\t\t<td>',
+    '\t\t\t<dl>',
+    '\t\t\t\t<dt>Summary</dt>',
+    ...pipe(
+      scoreKeyNames,
+      map(scoreKeyName => {
+        const score = summary[scoreKeyName] * 100
+        return `\t\t\t\t<dd>${scoreToColor(
+          score
+        )} ${scoreKeyName} ${score}</dd>`
+      }),
+      toArray
+    ),
+    '\t\t\t</dl>',
+    '\t\t</td>',
+    '\t</tr>'
+  ].join('\n')
+}
+
 async function run(): Promise<void> {
   try {
     const input = parseInput()
@@ -94,10 +113,10 @@ async function run(): Promise<void> {
     const entryEpochTime = getEntryEpochTime()
     const urlGrouped = pipe(
       urlList,
-      groupBy(urlItem => urlItem.url),
-    ) as { [url: string]: UrlList }
+      groupBy(urlItem => urlItem.url)
+    ) as {[url: string]: UrlList}
 
-    const data = await pipe(
+    const lighthouseReportMarkdownStr = await pipe(
       FormFactorList,
       toAsync,
       map(async formFactor => {
@@ -151,48 +170,38 @@ async function run(): Promise<void> {
       entries,
       map(args => {
         const [id, list] = args
-        return `
-              <details>
-                <summary>${id}</summary>
-                <table>
-                <tbody>
-                ${pipe(
-                  list,
-                  map(a => {
-                    const {formFactor, summary, imagePath} = a
-                    return `
-                          <tr>
-                            <td>${formFactor}</td> 
-                            <td><img src="${imagePath}" width="250" height="250"></td>
-                            <td>
-                              <dl>
-                                <dt>Summary</dt>
-                                ${pipe(
-                      range(0, scoreKeyNames.length),
-                      map(si => {
-                        const score = scoreList[si]
-                        return `<dd>${scoreToColor(score)} ${
-                          scoreKeyNames[si]
-                        } ${score}</dd>`
-                      }),
-                      toArray
-                    ).join('\n')}
-                              </dl>
-                            </td>
-                          </tr>
-                `
-          }),
-          toArray
-        ).join('\n')}
-                </tbody>
-                </table>
-                </details>
-            `
-      })
+        return [
+          '<details>',
+          `\t<summary>${id}</summary>`,
+          '\t<table>',
+          '\t<tbody>',
+          ...pipe(
+            list,
+            map(a => {
+              const {formFactor, summary, imagePath} = a
+              return createMarkdownTableRow(
+                formFactor as FormFactorName,
+                summary,
+                imagePath
+              )
+            }),
+            toArray
+          ),
+          '\t</tbody>',
+          '\t</table>',
+          '</details>'
+        ].join('\n')
+      }),
       toArray
     )
-    console.log(data)
-    core.setOutput('REPORT_MD_STRING', new Date().toTimeString())
+    const result = [
+      `### ⚡️ Lighthouse-CI\n`,
+      lighthouseReportMarkdownStr.join('\n')
+    ].join('\n')
+
+    await writeFile(`${reportDirName}/summary.md`, result)
+
+    core.setOutput('REPORT_MD_STRING', result)
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }

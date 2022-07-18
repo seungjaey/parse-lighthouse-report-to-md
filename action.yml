@@ -10,10 +10,6 @@ inputs:
     required: true
     description: 'Report dir name'
 
-  ASSERTION_DIR_NAME:
-    required: false
-    description: 'Test target url list'
-
   GH_TOKEN:
     required: true
     description: 'Github token for upload image'
