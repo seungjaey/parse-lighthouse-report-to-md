@@ -83,6 +83,7 @@ const getEntryEpochTime = () => Date.now();
 const uploadImage = (epochTime, ghToken, repoName, ownerName, formFactor, pathSlug, imageBinaryStr) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
     try {
+        core.debug('image upload');
         const ocktokit = (0, github_1.getOctokit)(ghToken);
         const JPEG_PLACE_HOLDER = 'data:image/jpeg;base64,';
         const result = yield ocktokit.rest.repos.createOrUpdateFileContents({
@@ -95,6 +96,8 @@ const uploadImage = (epochTime, ghToken, repoName, ownerName, formFactor, pathSl
         return ((_b = (_a = result.data) === null || _a === void 0 ? void 0 : _a.content) === null || _b === void 0 ? void 0 : _b.download_url) || '';
     }
     catch (error) {
+        core.debug('image upload error');
+        core.debug(error.message);
         return '';
     }
 });
