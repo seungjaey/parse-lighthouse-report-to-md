@@ -69,6 +69,8 @@ const uploadImage = async (
     })
     return result.data?.content?.download_url || ''
   } catch (error) {
+    core.info('image upload error')
+    core.info(error.message)
     return ''
   }
 }
