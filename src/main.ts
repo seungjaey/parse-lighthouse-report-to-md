@@ -9,7 +9,8 @@ import {
   keys,
   flat,
   values,
-  some
+  some,
+  reject
 } from '@fxts/core'
 import {getOctokit} from '@actions/github'
 import * as core from '@actions/core'
@@ -185,7 +186,14 @@ async function run(): Promise<void> {
         const [id, list] = args
         const hasLowScore = pipe(
           list,
-          map(({summary}) => pipe(values(summary), toArray)),
+          map(({summary}) =>
+            pipe(
+              keys(summary),
+              reject(keyName => keyName === 'pwa'),
+              map(keyName => summary[keyName]),
+              toArray
+            )
+          ),
           flat,
           toArray,
           some(score => score < 0.5)
