@@ -58,6 +58,7 @@ const uploadImage = async (
   imageBinaryStr: string
 ): Promise<string> => {
   try {
+    core.debug('image upload')
     const ocktokit = getOctokit(ghToken)
     const JPEG_PLACE_HOLDER = 'data:image/jpeg;base64,'
     const result = await ocktokit.rest.repos.createOrUpdateFileContents({
@@ -69,8 +70,8 @@ const uploadImage = async (
     })
     return result.data?.content?.download_url || ''
   } catch (error) {
-    core.info('image upload error')
-    core.info(error.message)
+    core.debug('image upload error')
+    core.debug((error as Error).message)
     return ''
   }
 }
