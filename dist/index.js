@@ -123,10 +123,7 @@ const createMarkdownTableRow = (formFactor, summary, imagePath) => {
         '\t</tr>'
     ].join('\n');
 };
-const createFileName = (epochTime, formFactor, pathSlug) => {
-    const encodedPathSlug = encodeURIComponent(pathSlug);
-    return `${epochTime}/${formFactor}/${encodedPathSlug}.jpg`;
-};
+const createFileName = (epochTime, formFactor, pathSlug) => `${epochTime}/${formFactor}/${pathSlug}.jpg`;
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {

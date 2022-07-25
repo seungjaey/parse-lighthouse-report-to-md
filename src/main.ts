@@ -86,10 +86,7 @@ const createFileName = (
   epochTime: number,
   formFactor: FormFactorName,
   pathSlug: string
-): string => {
-  const encodedPathSlug = encodeURIComponent(pathSlug)
-  return `${epochTime}/${formFactor}/${encodedPathSlug}.jpg`
-}
+): string => `${epochTime}/${formFactor}/${pathSlug}.jpg`
 
 async function run(): Promise<void> {
   try {
