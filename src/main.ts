@@ -12,6 +12,7 @@ import {
   reject
 } from '@fxts/core'
 import * as core from '@actions/core'
+import {nanoid} from 'nanoid'
 
 import parseInput, {UrlList} from './utils/parseInput'
 import {FormFactorList, FormFactorName} from './constants/FormFactor'
@@ -82,11 +83,8 @@ const createMarkdownTableRow = (
   ].join('\n')
 }
 
-const createFileName = (
-  epochTime: number,
-  formFactor: FormFactorName,
-  pathSlug: string
-): string => `${epochTime}/${formFactor}/${pathSlug}.jpg`
+const createFileName = (epochTime: number): string =>
+  `${epochTime}/${nanoid(10)}.jpg`
 
 async function run(): Promise<void> {
   try {
@@ -140,12 +138,8 @@ async function run(): Promise<void> {
           }),
           map(async manifestItem => {
             const {imageBinary, url} = manifestItem
-            const {pathSlug, label, path} = urlGrouped[url][0]
-            const s3ObjectKeyName = createFileName(
-              entryEpochTime,
-              formFactor as FormFactorName,
-              pathSlug
-            )
+            const {label, path} = urlGrouped[url][0]
+            const s3ObjectKeyName = createFileName(entryEpochTime)
             const imagePath = await s3Client.uploadImage(
               s3BucketName,
               s3ObjectKeyName,
