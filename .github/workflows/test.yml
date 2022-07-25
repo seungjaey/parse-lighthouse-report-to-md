@@ -23,6 +23,6 @@ jobs:
         with:
           URL_LIST_JSON_STRING: '[{"label":"홈","path":"/","pathSlug":"_","url":"http://localhost:3000/"},{"label":"포스트","path":"/posts","pathSlug":"_posts","url":"http://localhost:3000/posts"}]'
           REPORT_DIR_NAME: 1
-          IMAGE_REPO_TOKEN: 1
-          IMAGE_REPO_NAME: 1
-          IMAGE_REPO_OWNER_NAME: 1
+          S3_BUCKET_NAME: kurly-lighthouse-ci
+          AWS_ACCESS_KEY_ID: 1
+          AWS_SECRET_ACCESS_KEY: 1

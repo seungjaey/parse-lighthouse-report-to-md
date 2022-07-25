@@ -10,17 +10,17 @@ inputs:
     required: true
     description: 'Report dir name'
 
-  IMAGE_REPO_TOKEN:
+  S3_BUCKET_NAME:
     required: true
-    description: 'Token that can access to image repo'
+    description: 'S3 Bucket name'
 
-  IMAGE_REPO_NAME:
+  AWS_ACCESS_KEY_ID:
     required: true
-    description: 'Image Repository name'
+    description: 'AWS Access key id'
 
-  IMAGE_REPO_OWNER_NAME:
+  AWS_SECRET_ACCESS_KEY:
     required: true
-    description: 'Image Repository owner name'
+    description: 'AWS Secret Access key'
 
 outputs:
   REPORT_MD_STRING:

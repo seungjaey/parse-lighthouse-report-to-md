@@ -8,15 +8,14 @@ import {
   groupBy,
   keys,
   flat,
-  values,
   some,
   reject
 } from '@fxts/core'
-import {getOctokit} from '@actions/github'
 import * as core from '@actions/core'
 
 import parseInput, {UrlList} from './utils/parseInput'
 import {FormFactorList, FormFactorName} from './constants/FormFactor'
+import S3 from './module/s3'
 
 interface SimpleRunnerResult {
   audits: {
@@ -51,34 +50,6 @@ interface ManifestItem {
 
 const getEntryEpochTime = (): number => Date.now()
 
-const uploadImage = async (
-  epochTime: number,
-  imageRepoToken: string,
-  repoName: string,
-  ownerName: string,
-  formFactor: string,
-  pathSlug: string,
-  imageBinaryStr: string
-): Promise<string> => {
-  try {
-    const ocktokit = getOctokit(imageRepoToken)
-    const JPEG_PLACE_HOLDER = 'data:image/jpeg;base64,'
-    const result = await ocktokit.rest.repos.createOrUpdateFileContents({
-      owner: ownerName,
-      repo: repoName,
-      message: 'Adding an image to the repository',
-      path: `${epochTime}/${formFactor}/${encodeURIComponent(pathSlug)}.jpg`,
-      content: imageBinaryStr.replace(JPEG_PLACE_HOLDER, '')
-    })
-    return result.data?.content?.download_url || ''
-  } catch (error) {
-    core.error('image upload error')
-    core.error((error as Error).message)
-    core.error((error as Error).stack || '')
-    return ''
-  }
-}
-
 const scoreToColor = (score: number): string =>
   score >= 90 ? '🟢' : score >= 50 ? '🟠' : '🔴'
 
@@ -111,16 +82,28 @@ const createMarkdownTableRow = (
   ].join('\n')
 }
 
+const createFileName = (
+  epochTime: number,
+  formFactor: FormFactorName,
+  pathSlug: string
+): string => {
+  const encodedPathSlug = encodeURIComponent(pathSlug)
+  return `${epochTime}/${formFactor}/${encodedPathSlug}.jpg`
+}
+
 async function run(): Promise<void> {
   try {
     const input = parseInput()
     const {
       urlList,
       reportDirName,
-      imageRepoToken,
-      imageRepoName,
-      imageRepoOwnerName
+      s3BucketName,
+      awsAccessKeyId,
+      awsSecretAccessKey
     } = input
+
+    const s3Client = new S3(awsAccessKeyId, awsSecretAccessKey)
+
     const entryEpochTime = getEntryEpochTime()
     const urlGrouped = pipe(
       urlList,
@@ -161,13 +144,14 @@ async function run(): Promise<void> {
           map(async manifestItem => {
             const {imageBinary, url} = manifestItem
             const {pathSlug, label, path} = urlGrouped[url][0]
-            const imagePath = await uploadImage(
+            const s3ObjectKeyName = createFileName(
               entryEpochTime,
-              imageRepoToken,
-              imageRepoName,
-              imageRepoOwnerName,
-              manifestItem.formFactor as string,
-              pathSlug,
+              formFactor as FormFactorName,
+              pathSlug
+            )
+            const imagePath = await s3Client.uploadImage(
+              s3BucketName,
+              s3ObjectKeyName,
               imageBinary
             )
             return {
